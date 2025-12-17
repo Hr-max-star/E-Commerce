@@ -1,153 +1,29 @@
-E-Commerce Backend API (Django)
 
-This project is a backend API for an e-commerce application, built using Django and Django REST Framework.
-It handles product catalog, user authentication, orders, payments, and invoices, with a clean and extensible data model.
+E-Commerce Backend System (Django REST API)
+1. Project Overview
 
-The focus of this project is backend structure, security, and real-world API behavior, not just CRUD.
+This project is a backend system for an E-commerce application, built using Django and Django REST Framework.
 
-What this project does
+It supports public product browsing, admin and customer authentication, guest checkout, and complete order–payment–invoice flow.
+The project is designed to reflect real-world backend architecture, focusing on clean models, permissions, and scalable REST APIs.
 
-Allows users to browse products and categories without login
+2. What This Project Does
 
-Supports admin login using email & password
+Browse products and categories without login
 
-Supports customer login using mobile number & OTP
+Admin login using email & password
 
-Allows guest checkout (no account required)
+Customer login using mobile number & OTP
 
-Manages orders, payments, and invoices
+Guest checkout support
 
-Uses PostgreSQL as the database
+Manage products, orders, payments, and invoices
+
+Uses soft delete instead of permanent deletion
 
 Follows REST API best practices
 
-Common Base Model
-
-All major models inherit from a shared BaseModel.
-This keeps the system consistent and avoids repeated fields.
-
-The base model provides:
-
-Status and comments
-
-Active date range
-
-Created / modified timestamps
-
-Created by / modified by user
-
-Soft delete (is_deleted)
-
-Suspend flag (is_suspended)
-
-This makes auditing and lifecycle management easy across the application.
-
-Main Models
-User
-
-Admin users log in using email + password
-
-Customers log in using mobile number + OTP
-
-OTP is set to 1234 for development
-
-Role flags control permissions (admin, staff, customer)
-
-Store
-
-Represents a seller or shop
-
-Linked to a user (store owner)
-
-Stores contact and address information
-
-Category & Subcategory
-
-Used to organize products
-
-Categories can be global or store-specific
-
-Subcategories belong to a category
-
-Product
-
-Identified using a unique SKU
-
-Linked to category, subcategory, and store
-
-Tracks price and inventory
-
-Supports multiple images and variant attributes
-
-Product Image
-
-Multiple images per product
-
-Supports ordering and alt text
-
-Order & Order Items
-
-Orders can be placed by guests or logged-in users
-
-Each order contains multiple order items
-
-Tracks quantity, price, and totals
-
-Order status is managed centrally
-
-Payment
-
-Stores payment method and transaction details
-
-Designed to work with payment gateways
-
-Can store webhook or metadata information
-
-Invoice
-
-Generated per order
-
-Stores invoice number, dates, and amount
-
-Designed for PDF export in future
-
-Authentication & Access Rules
-
-No authentication required to view products or categories
-
-Authentication required to create or manage data
-
-Admin and staff users manage catalog
-
-Customers can place and view their own orders
-
-Guests can place orders without login
-
-Permissions are handled using Django REST Framework permission classes and custom checks where required.
-
-API Overview (Examples)
-
-Public APIs:
-
-GET /api/categories/
-GET /api/products/
-GET /api/products/{id}/
-
-
-Authentication:
-
-POST /api/auth/admin/login/
-POST /api/auth/customer/login/
-POST /api/auth/customer/request-otp/
-
-
-Protected APIs:
-
-POST /api/products/
-POST /api/orders/
-GET  /api/orders/{id}/
-
-Tech Stack
+3. Technologies Used
 
 Python
 
@@ -159,23 +35,98 @@ PostgreSQL
 
 Git & GitHub
 
-Development Notes
+4. Core Models
+Model Name	Key Fields	Description
+User	email, mobile_number, password, otp, role flags	Handles admin and customer authentication.
+Store	name, owner, contact_email, contact_phone	Represents a seller or store.
+Category	name, slug, description	Top-level product grouping.
+Subcategory	name, category (FK)	Subdivision of a category.
+Product	sku, name, price, inventory_count, category, store	Sellable item with inventory tracking.
+ProductImage	product (FK), image, order	Stores multiple images per product.
+Order	user, store, total_amount, status	Represents an order placed by guest or customer.
+OrderItem	order (FK), product (FK), quantity, unit_price	Individual items inside an order.
+Payment	order (FK), payment_method, transaction_id, status	Stores payment transaction details.
+Invoice	order (FK), invoice_number, amount	Generated invoice for each order.
+Relationship Summary
 
-Uses soft delete instead of hard delete
+One User → Many Orders
 
-OTP is hardcoded for development only
+One Store → Many Products
 
-.env is used for secrets and database config
+One Category → Many Subcategories
 
-Designed to be extended with:
+One Product → Many ProductImages
 
-Real OTP service
+One Order → Many OrderItems
 
-Payment gateway
+One Order → One Payment
 
-Invoice PDF generation
+One Order → One Invoice
 
-Local Setup
+5. Shared Base Model
+
+All major models inherit from a common BaseModel to maintain consistency.
+
+BaseModel Fields
+Field Name	Purpose
+status_flag	Status indicator (ACTIVE, INACTIVE, etc.)
+comments	Additional notes
+active_from / active_to	Validity period
+cdate / mdate	Created and modified timestamps
+cuser / muser	Created by / modified by
+is_deleted	Soft delete flag
+is_suspended	Suspension flag
+
+This helps with auditing, lifecycle tracking, and safe deletion.
+
+6. Authentication & Authorization
+Authentication Types
+
+Admin → Email + Password
+
+Customer → Mobile Number + OTP
+
+Guest → No login required
+
+OTP is set to 1234 for development/testing.
+
+Access Rules
+Action	Access
+View products & categories	Public
+Manage products & categories	Admin / Store staff
+Place order	Guest or Customer
+View order details	Order owner or Admin
+7. API Overview
+Public APIs
+GET /api/categories/
+GET /api/products/
+GET /api/products/{id}/
+
+Authentication APIs
+POST /api/auth/admin/login/
+POST /api/auth/customer/login/
+POST /api/auth/customer/request-otp/
+
+Protected APIs
+POST /api/products/
+POST /api/orders/
+GET  /api/orders/{id}/
+
+8. Key Features
+
+RESTful API design
+
+Role-based access control
+
+Guest checkout support
+
+Soft delete for records
+
+Scalable and extensible data models
+
+Ready for payment gateway integration
+
+9. Installation & Setup
 git clone https://github.com/Hr-max-star/E-Commerce.git
 cd Ecommerce_project
 python -m venv venv
@@ -185,19 +136,29 @@ python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 
-About This Project
+10. Notes & Future Improvements
 
-This project was built to:
+Replace hardcoded OTP with real SMS service
 
-Practice real-world backend architecture
+Integrate payment gateway (Stripe / Razorpay)
 
-Understand authentication flows
+Generate invoice PDFs
 
-Work with relational data models
+Add caching for performance optimization
 
-Follow clean Django REST patterns
+11. Learning Outcomes
 
-Author
+Django REST Framework architecture
+
+Authentication and permission handling
+
+Real-world database relationships
+
+Clean backend project structure
+
+Professional Git & GitHub workflow
+
+12. Author
 
 Hari
-Backend Developer (Django, REST APIs)# E-Commerce
+Backend Developer – Django & REST APIs
